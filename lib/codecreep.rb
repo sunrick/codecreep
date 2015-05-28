@@ -75,6 +75,37 @@ module Codecreep
     end
 
     def analyze
+      puts "\n\n"
+      self.most_followed
+      puts "\n\n"
+      self.most_following
+      puts "\n\n"
+      self.most_networked
+      puts "\n\n"
+    end
+
+    def most_followed
+      users = User.order(follower_count: :desc).limit(10)
+      puts "User | Most Followers"
+      users.each do |user|
+        puts "#{user.name} | #{user.follower_count}"
+      end
+    end
+
+    def most_following
+      users = User.order(following_count: :desc).limit(10)
+      puts "User | Most Following"
+      users.each do |user|
+        puts "#{user.name} | #{user.following_count}"
+      end
+    end
+
+    def most_networked
+      users = User.order('follower_count + following_count DESC').limit(10)
+      puts "User | Most Networked"
+      users.each do |user|
+        puts "#{user.name} | #{user.follower_count + user.following_count}"
+      end
     end
 
   end
