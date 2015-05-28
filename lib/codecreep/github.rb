@@ -9,32 +9,14 @@ module Codecreep
 
     def get_user_info(user)
       user = Github.get("/users/#{user}")
-      result = {
-        name: user['login'],
-        homepage: user['html_url'],
-        company: user['company'],
-        follower_count: user['followers'],
-        following_count: user['following'],
-        repo_count: user['public_repos']
-      }
     end
 
     def get_followers(user)
-      result = []
       followers = Github.get("/users/#{user}/followers?per_page=100")
-      followers.each do |follower|
-        result << follower['login']
-      end
-      result
     end
 
     def get_following(user)
-      result = []
       following = Github.get("/users/#{user}/following?per_page=100")
-      following.each do |follow|
-        result << follow['login']
-      end
-      result
     end
 
     def get_rate_limit
@@ -42,5 +24,29 @@ module Codecreep
       result = result['resources']['core']['remaining']
     end
 
+    def pagination_followers(user, page_num)
+      params = { query: {page: page_num}}
+      Github.get("/users/#{user}/following")
+      puts Github.get("/users/#{user}/following").headers
+    end
+
+    def header(user)
+      response = Github.get("/users/#{user}/following").headers
+      response['link'].split(", ")[1].match(/page=(\d+)/).captures.to_i
+    end
+
+    def get_page_count(response)
+      response['link'].split(", ")[1].match(/page=(\d+)/).captures.to_i
+    end
+
+    def get_all_followers(user)
+      followers = []
+      page = 1
+      response = self.list_followers(user, page)
+      while response.length == 30
+        followers += response
+        page += 1
+        response = self.list_followers(user, page)
+      end
   end
 end
