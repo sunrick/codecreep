@@ -28,37 +28,53 @@ module Codecreep
 
     def create_user(user)
       unless User.exists?(name: user)
-        user_data = @github.get_user_info(user)
+        user_info = @github.get_user_info(user)
         user_data = {
-          name: user['login'],
-          homepage: user['html_url'],
-          company: user['company'],
-          follower_count: user['followers'],
-          following_count: user['following'],
-          repo_count: user['public_repos']
+          name: user_info['login'],
+          homepage: user_info['html_url'],
+          company: user_info['company'],
+          follower_count: user_info['followers'],
+          following_count: user_info['following'],
+          repo_count: user_info['public_repos']
         }
         User.create(user_data)
+        puts user_data
       end
     end
 
     def create_all_users(user_list)
       user_list.each do |user|
         self.create_user(user)
-        followers = @github.get_followers
+        followers = list_all_related_users(user, "followers")
         followers.each do |follower|
           self.create_user(follower)
         end
-        following = @github.get_following
+        following = list_all_related_users(user, "following")
         following.each do |follow|
           self.create_user(follow)
         end
       end
     end
 
+    def list_all_related_users(user, relation)
+      user_list = []
+      page = 1
+      response = @github.get_related_users(user, relation, page)
+      while response.length != 0
+        user_list += response.map {|x| x['login']}
+        page += 1
+        response = @github.get_related_users(user, relation, page)
+      end
+      user_list + response.map {|x| x['login']}
+    end
+
     def fetch
       # aftravis, Diavolo, jb55, adriennefriend, b-towers-atl, agam, brossetti1, avodonosov, vsedach, augustdaze
-      self.get_user_list 
+      user_list = self.get_user_list 
       self.create_all_users(user_list)
+    end
+
+    def analyze
     end
 
   end
